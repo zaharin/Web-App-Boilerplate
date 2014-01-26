@@ -10,7 +10,7 @@ var uglify  = require('gulp-uglify');
 var less    = require('gulp-less');
 var csso    = require('gulp-csso');
 var es      = require('event-stream');
-var embedlr = require("gulp-embedlr");
+var embedlr = require('gulp-embedlr');
 var refresh = require('gulp-livereload');
 var express = require('express');
 var http    = require('http');
@@ -55,21 +55,20 @@ gulp.task('styles', function () {
 
 gulp.task('server', function () {
     // Create a HTTP server for static files
-    var port = 3000;
+    var port = 1029;
     var app = express();
     var server = http.createServer(app);
 
     app.use(express.static(__dirname + '/dist'));
 
-    server.on("listening", function () {
-        gutil.log("Listening on http://locahost:" + server.address().port);
+    server.on('listening', function () {
+        gutil.log('Listening on http://locahost:' + server.address().port);
     });
 
     server.on('error', function (err) {
         if (err.code === 'EADDRINUSE') {
             gutil.log('Address in use, retrying...');
             setTimeout(function () {
-                server.close();
                 server.listen(port);
             }, 1000);
         }
@@ -94,9 +93,9 @@ gulp.task('watch', function () {
     // Watch .less files and run tasks if they change
     gulp.watch('src/less/**/*.less', ['styles']);
 
-    gulp.src("./src/*.html")
+    gulp.src('./src/*.html')
         .pipe(embedlr())
-        .pipe(gulp.dest("./dist"));
+        .pipe(gulp.dest('./dist'));
 });
 
 // The dist task (used to store all files that will go to the server)
