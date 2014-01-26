@@ -65,7 +65,7 @@ gulp.task('server', function () {
         gutil.log("Listening on http://locahost:" + server.address().port);
     });
 
-    server.on('error', function(err) {
+    server.on('error', function (err) {
         if (err.code === 'EADDRINUSE') {
             gutil.log('Address in use, retrying...');
             setTimeout(function () {
