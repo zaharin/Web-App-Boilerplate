@@ -1,31 +1,23 @@
 // For more information on how to configure a task runner, please visit:
 // https://github.com/gulpjs/gulp
 
-var gulp        = require('gulp');
-var gutil       = require('gulp-util');
-var clean       = require('gulp-clean');
-var concat      = require('gulp-concat');
-var rename      = require('gulp-rename');
-var uglify      = require('gulp-uglify');
-var less        = require('gulp-less');
-var csso        = require('gulp-csso');
-var es          = require('event-stream');
-var embedlr     = require("gulp-embedlr");
-var livereload  = require('gulp-livereload');
-var path        = require('path');
-var express     = require('express');
-var lr          = require('tiny-lr');
-var server      = lr();
+var gulp       = require('gulp');
+var gutil      = require('gulp-util');
+var clean      = require('gulp-clean');
+var concat     = require('gulp-concat');
+var rename     = require('gulp-rename');
+var uglify     = require('gulp-uglify');
+var less       = require('gulp-less');
+var csso       = require('gulp-csso');
+var es         = require('event-stream');
+var embedlr    = require("gulp-embedlr");
+var refresh    = require('gulp-livereload');
+var path       = require('path');
+var express    = require('express');
+var http       = require('http');
+var lr         = require('tiny-lr')();
 
-// Create a server for static files
-// For more information, please visit: https://github.com/visionmedia/express
-var app = express();
-app.use(express.static(path.resolve('./dist')));
-app.listen(8080, function() {
-    gutil.log('Listening on http://localhost:8080');
-});
-
-gulp.task('clean', function() {
+gulp.task('clean', function () {
     // Clear the destination folder
     gulp.src('dist/**/*.*', { read: false })
         .pipe(clean());
@@ -49,7 +41,7 @@ gulp.task('scripts', function () {
         .pipe(concat('app.js'))
         .pipe(uglify())
         .pipe(gulp.dest('dist/js'))
-        .pipe(livereload(server));
+        .pipe(refresh(lr));
 });
 
 gulp.task('styles', function () {
@@ -59,31 +51,41 @@ gulp.task('styles', function () {
         .pipe(rename('app.css'))
         .pipe(csso())
         .pipe(gulp.dest('dist/css'))
-        .pipe(livereload(server));
+        .pipe(refresh(lr));
 });
 
-gulp.task('watch', function() {
-    // Create a LiveReload server and watch for modifications in *.less and *.js files
-    // For more information, please visit: https://github.com/mklabs/tiny-lr
-    server.listen(35729, function (err) {
+gulp.task('server', function() {
+    // Create a HTTP server for static files
+    var app = express();
+    var server = http.createServer(app);
+    app.use(express.static(__dirname + '/dist'));
+    server.listen(3000);
+    gutil.log('Listening on http://localhost:' + server.address().port);
+});
+
+gulp.task('lr-server', function () {
+    // Create a LiveReload server
+    lr.listen(35729, function (err) {
         if (err) {
-            return console.log(err);
+            gutil.log(err);
         }
-
-        // Watch .js files and run tasks if they change
-        gulp.watch('src/js/**', ['scripts']);
-
-        // Watch .less files and run tasks if they change
-        gulp.watch('src/less/**/*.less', ['styles']);
-
-        gulp.src("./src/*.html")
-            .pipe(embedlr())
-            .pipe(gulp.dest("./dist"));
     });
+});
+
+gulp.task('watch', function () {
+    // Watch .js files and run tasks if they change
+    gulp.watch('src/js/**', ['scripts']);
+
+    // Watch .less files and run tasks if they change
+    gulp.watch('src/less/**/*.less', ['styles']);
+
+    gulp.src("./src/*.html")
+        .pipe(embedlr())
+        .pipe(gulp.dest("./dist"));
 });
 
 // The dist task (used to store all files that will go to the server)
 gulp.task('dist', ['clean', 'copy', 'scripts', 'styles']);
 
 // The default task (called when you run `gulp`)
-gulp.task('default', ['clean', 'copy', 'scripts', 'styles', 'watch']);
+gulp.task('default', ['clean', 'copy', 'scripts', 'styles', 'lr-server', 'server', 'watch']);

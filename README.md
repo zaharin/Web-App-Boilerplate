@@ -53,6 +53,7 @@ git merge base/master
 * "Delete-key friendly." Easy to strip out parts you don't need.
 * Extensive inline and accompanying documentation.
 * LESS-based style sheets
+* Bundling and minification
 
 
 ## Documentation
