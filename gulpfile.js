@@ -6,6 +6,7 @@ var gutil   = require('gulp-util');
 var clean   = require('gulp-clean');
 var concat  = require('gulp-concat');
 var rename  = require('gulp-rename');
+var jshint  = require('gulp-jshint');
 var uglify  = require('gulp-uglify');
 var less    = require('gulp-less');
 var csso    = require('gulp-csso');
@@ -19,7 +20,7 @@ var lr      = require('tiny-lr')();
 gulp.task('clean', function () {
     // Clear the destination folder
     gulp.src('dist/**/*.*', { read: false })
-        .pipe(clean());
+        .pipe(clean({ force: true }));
 });
 
 gulp.task('copy', function () {
@@ -35,12 +36,20 @@ gulp.task('copy', function () {
 });
 
 gulp.task('scripts', function () {
-    // Concatenate, minify and copy all JavaScript (except vendor scripts)
-    return gulp.src(['src/js/**/*.js', '!src/js/vendor/**'])
-        .pipe(concat('app.js'))
-        .pipe(uglify())
-        .pipe(gulp.dest('dist/js'))
-        .pipe(refresh(lr));
+    return es.concat(
+        // Detect errors and potential problems in your JavaScript code
+        // You can enable or disable default JSHint options in the .jshintrc file
+        gulp.src(['src/js/**/*.js', '!src/js/vendor/**'])
+            .pipe(jshint('.jshintrc'))
+            .pipe(jshint.reporter(require('jshint-stylish'))),
+
+        // Concatenate, minify and copy all JavaScript (except vendor scripts)
+        gulp.src(['src/js/**/*.js', '!src/js/vendor/**'])
+            .pipe(concat('app.js'))
+            .pipe(uglify())
+            .pipe(gulp.dest('dist/js'))
+            .pipe(refresh(lr))
+    );
 });
 
 gulp.task('styles', function () {
@@ -88,7 +97,7 @@ gulp.task('lr-server', function () {
 
 gulp.task('watch', function () {
     // Watch .js files and run tasks if they change
-    gulp.watch('src/js/**', ['scripts']);
+    gulp.watch('src/js/**/*.js', ['scripts']);
 
     // Watch .less files and run tasks if they change
     gulp.watch('src/less/**/*.less', ['styles']);
