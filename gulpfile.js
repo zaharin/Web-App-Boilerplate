@@ -55,6 +55,7 @@ gulp.task('styles', function () {
 
 gulp.task('server', function () {
     // Create a HTTP server for static files
+    var port = 3000;
     var app = express();
     var server = http.createServer(app);
     
@@ -74,7 +75,7 @@ gulp.task('server', function () {
         }
     });
 
-    server.listen(3000);
+    server.listen(port);
 });
 
 gulp.task('lr-server', function () {
