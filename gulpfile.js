@@ -62,35 +62,28 @@ gulp.task('styles', function () {
         .pipe(livereload(server));
 });
 
-// The dist task (used to store all files that will go to the server)
-gulp.task('dist', function () {
-    gulp.run('clean', 'copy', 'scripts', 'styles');
-});
-
-// The default task (called when you run `gulp`)
-gulp.task('default', function () {
-
-    gulp.run('dist');
-
+gulp.task('watch', function() {
     // Create a LiveReload server and watch for modifications in *.less and *.js files
     // For more information, please visit: https://github.com/mklabs/tiny-lr
     server.listen(35729, function (err) {
         if (err) {
             return console.log(err);
-        };
+        }
 
         // Watch .js files and run tasks if they change
-        gulp.watch('src/js/**', function () {
-            gulp.run('scripts');
-        });
+        gulp.watch('src/js/**', ['scripts']);
 
         // Watch .less files and run tasks if they change
-        gulp.watch('src/less/**/*.less', function () {
-            gulp.run('styles');
-        });
+        gulp.watch('src/less/**/*.less', ['styles']);
 
         gulp.src("./src/*.html")
             .pipe(embedlr())
             .pipe(gulp.dest("./dist"));
     });
 });
+
+// The dist task (used to store all files that will go to the server)
+gulp.task('dist', ['clean', 'copy', 'scripts', 'styles']);
+
+// The default task (called when you run `gulp`)
+gulp.task('default', ['clean', 'copy', 'scripts', 'styles', 'watch']);
