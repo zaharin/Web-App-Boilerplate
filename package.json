@@ -5,7 +5,7 @@
   "devDependencies": {
     "event-stream": "~3.1.0",
     "express": "~3.4.8",
-    "gulp": "~3.3.4",
+    "gulp": "~3.4.0",
     "gulp-clean": "~0.2.2",
     "gulp-concat": "~2.1.7",
     "gulp-csso": "~0.1.7",
