@@ -12,7 +12,6 @@ var csso       = require('gulp-csso');
 var es         = require('event-stream');
 var embedlr    = require("gulp-embedlr");
 var refresh    = require('gulp-livereload');
-var path       = require('path');
 var express    = require('express');
 var http       = require('http');
 var lr         = require('tiny-lr')();
@@ -54,13 +53,28 @@ gulp.task('styles', function () {
         .pipe(refresh(lr));
 });
 
-gulp.task('server', function() {
+gulp.task('server', function () {
     // Create a HTTP server for static files
     var app = express();
     var server = http.createServer(app);
+    
     app.use(express.static(__dirname + '/dist'));
+
+    server.on("listening", function () {
+        console.log("Listening on http://locahost:" + server.address().port);
+    });
+
+    server.on('error', function(err) {
+        if (err.code === 'EADDRINUSE') {
+            gutil.log('Address in use, retrying...');
+            setTimeout(function () {
+                server.close();
+                server.listen(port);
+            }, 1000);
+        }
+    });
+
     server.listen(3000);
-    gutil.log('Listening on http://localhost:' + server.address().port);
 });
 
 gulp.task('lr-server', function () {
