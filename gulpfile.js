@@ -1,20 +1,20 @@
 // For more information on how to configure a task runner, please visit:
 // https://github.com/gulpjs/gulp
 
-var gulp       = require('gulp');
-var gutil      = require('gulp-util');
-var clean      = require('gulp-clean');
-var concat     = require('gulp-concat');
-var rename     = require('gulp-rename');
-var uglify     = require('gulp-uglify');
-var less       = require('gulp-less');
-var csso       = require('gulp-csso');
-var es         = require('event-stream');
-var embedlr    = require("gulp-embedlr");
-var refresh    = require('gulp-livereload');
-var express    = require('express');
-var http       = require('http');
-var lr         = require('tiny-lr')();
+var gulp    = require('gulp');
+var gutil   = require('gulp-util');
+var clean   = require('gulp-clean');
+var concat  = require('gulp-concat');
+var rename  = require('gulp-rename');
+var uglify  = require('gulp-uglify');
+var less    = require('gulp-less');
+var csso    = require('gulp-csso');
+var es      = require('event-stream');
+var embedlr = require("gulp-embedlr");
+var refresh = require('gulp-livereload');
+var express = require('express');
+var http    = require('http');
+var lr      = require('tiny-lr')();
 
 gulp.task('clean', function () {
     // Clear the destination folder
@@ -58,7 +58,7 @@ gulp.task('server', function () {
     var port = 3000;
     var app = express();
     var server = http.createServer(app);
-    
+
     app.use(express.static(__dirname + '/dist'));
 
     server.on("listening", function () {
