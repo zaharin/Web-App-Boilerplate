@@ -7,6 +7,7 @@ var clean   = require('gulp-clean');
 var concat  = require('gulp-concat');
 var rename  = require('gulp-rename');
 var jshint  = require('gulp-jshint');
+var inject  = require("gulp-inject");
 var uglify  = require('gulp-uglify');
 var less    = require('gulp-less');
 var csso    = require('gulp-csso');
@@ -15,22 +16,19 @@ var embedlr = require('gulp-embedlr');
 var refresh = require('gulp-livereload');
 var express = require('express');
 var http    = require('http');
-var lr      = require('tiny-lr')();
+var server      = require('tiny-lr')();
+var rev = require('gulp-rev');
 
 gulp.task('clean', function () {
     // Clear the destination folder
-    gulp.src('dist/**/*.*', { read: false })
+    return gulp.src('dist/**/*.*', { read: false })
         .pipe(clean({ force: true }));
 });
 
 gulp.task('copy', function () {
     // Copy all application files except *.less and .js into the `dist` folder
     return es.concat(
-        gulp.src(['src/img/**'])
-            .pipe(gulp.dest('dist/img')),
-        gulp.src(['src/js/vendor/**'])
-            .pipe(gulp.dest('dist/js/vendor')),
-        gulp.src(['src/*.*'])
+        gulp.src(['src/**/*', '!src/less/*.less', '!src/js/*.js'])
             .pipe(gulp.dest('dist'))
     );
 });
@@ -47,8 +45,9 @@ gulp.task('scripts', function () {
         gulp.src(['src/js/**/*.js', '!src/js/vendor/**'])
             .pipe(concat('app.js'))
             .pipe(uglify())
+            .pipe(rev())
             .pipe(gulp.dest('dist/js'))
-            .pipe(refresh(lr))
+            .pipe(refresh(server))
     );
 });
 
@@ -58,18 +57,19 @@ gulp.task('styles', function () {
         .pipe(less())
         .pipe(rename('app.css'))
         .pipe(csso())
+        .pipe(rev())
         .pipe(gulp.dest('dist/css'))
-        .pipe(refresh(lr));
+        .pipe(refresh(server));
 });
+
 
 gulp.task('server', function () {
     // Create a HTTP server for static files
     var port = 3000;
     var app = express();
+    app.use(express.static(__dirname + '/src'));
+
     var server = http.createServer(app);
-
-    app.use(express.static(__dirname + '/dist'));
-
     server.on('listening', function () {
         gutil.log('Listening on http://localhost:' + server.address().port);
     });
@@ -88,27 +88,39 @@ gulp.task('server', function () {
 
 gulp.task('lr-server', function () {
     // Create a LiveReload server
-    lr.listen(35729, function (err) {
+    server.listen(35729, function (err) {
         if (err) {
             gutil.log(err);
         }
     });
 });
 
+function notifyLivereload(event) {
+    gulp.src(event.path, {read: false})
+        .pipe(refresh(server));
+}
+
 gulp.task('watch', function () {
     // Watch .js files and run tasks if they change
-    gulp.watch('src/js/**/*.js', ['scripts']);
+    gulp.watch('src/js/**/*.js', notifyLivereload);
 
     // Watch .less files and run tasks if they change
-    gulp.watch('src/less/**/*.less', ['styles']);
+    gulp.watch('src/less/**/*.less', notifyLivereload);
 
-    gulp.src('./src/*.html')
-        .pipe(embedlr())
-        .pipe(gulp.dest('./dist'));
+    gulp.watch('src/*.html', notifyLivereload);
 });
 
 // The dist task (used to store all files that will go to the server)
-gulp.task('dist', ['clean', 'copy', 'scripts', 'styles']);
+gulp.task('dist', ['clean', 'copy', 'scripts', 'styles'], function() {
+
+    // Now we src all html files
+    return gulp.src('src/*.html')
+        .pipe(inject(gulp.src(["./dist/**/*.*", '!./dist/js/vendor/**'], {read: false}), {
+            addRootSlash: false,  // ensures proper relative paths
+            ignorePath: '/dist/' // ensures proper relative paths
+        }))
+        .pipe(gulp.dest("./dist"));
+});
 
 // The default task (called when you run `gulp`)
 gulp.task('default', ['clean', 'copy', 'scripts', 'styles', 'lr-server', 'server', 'watch']);
